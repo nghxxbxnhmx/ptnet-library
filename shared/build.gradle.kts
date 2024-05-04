@@ -12,13 +12,21 @@ kotlin {
             }
         }
     }
-    
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach {
-        it.binaries.framework {
+
+//    listOf(
+//        iosX64(),
+//        iosArm64(),
+//        iosSimulatorArm64()
+//    ).forEach {
+//        it.binaries.framework {
+//            baseName = "shared"
+//            isStatic = true
+//        }
+//    }
+
+
+    iosX64() {
+        binaries.framework {
             baseName = "shared"
             isStatic = true
         }
@@ -26,12 +34,13 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.gson)
-            implementation(libs.okhttp3)
             implementation(libs.jnbPing)
         }
-        androidMain.dependencies {  }
-        iosMain.dependencies {  }
+        androidMain.dependencies {
+            implementation(libs.gson)
+            implementation(libs.okhttp3)
+        }
+        iosMain.dependencies { }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
