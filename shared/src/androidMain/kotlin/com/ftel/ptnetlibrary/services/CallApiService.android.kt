@@ -13,18 +13,24 @@ actual class CallApiService {
             .url(url.toString())
             .build()
         var result = ""
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                Log.d("CallApiServices", "Not success")
-                throw IOException("Unexpected code $response")
-            } else {
-                //response.body!!.string(): Call nay 1 lan th :)) nhieu lan dispatcher loi
-                result = response.body!!.string()
-                Log.d("CallApiServices", "Progress's Result: $result")
+        return try {
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+//                Log.d("CallApiServices", "Not success")
+                    throw IOException("Unexpected code $response")
+                } else {
+                    //response.body!!.string(): Call nay 1 lan th :)) nhieu lan dispatcher loi
+                    result = response.body!!.string()
+                    response.body?.close()
+                    result
+//                Log.d("CallApiServices", "Progress's Result: $result")
+                }
             }
+        } catch (e: IOException) {
+            result = "Response's error ${e.message}"
+            Log.d("Process", result);
+            result
         }
-
-        return result
     }
 
 //    @Throws(IOException::class)
