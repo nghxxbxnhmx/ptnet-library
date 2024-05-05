@@ -36,6 +36,7 @@ kotlin {
             implementation(libs.gson)
             implementation(libs.okhttp3)
             implementation(libs.compose.ui)
+            implementation(libs.dnsJava)
         }
         iosMain.dependencies {  }
         commonTest.dependencies {
