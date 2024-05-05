@@ -1,24 +1,28 @@
 package com.ftel.ptnetlibrary.services
 
+import android.util.Log
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import java.io.IOException
 
 actual class PageLoadService {
-    val client = OkHttpClient()
+    private val client = OkHttpClient()
 
 
     actual fun pageLoadTimer(address: String): Double {
-        if (address.isNullOrEmpty()) {
+        // Log.d("PageLoad - Url", "isNull:${address.replace(" ", "").isBlank()}")
+        if (address.replace(" ", "").isBlank()) {
             return -1.0
         }
-        var url = ""
+
+        var url: String = ""
         if (address.contains("http://") || address.contains("https://")) {
             url = address.trim()
         } else {
             url = "http://${address.trim()}"
         }
+        // Log.d("PageLoad - Url", "Processed url: $url");
 
         val request: Request = Request.Builder().url(url).build()
 
@@ -31,7 +35,15 @@ actual class PageLoadService {
                 ?.close()
             duration.toDouble()
         } catch (e: IOException) {
-            -1.0
+            Log.d("Process", "Response's error ${e.message}");
+            -2.0
         }
     }
 }
+
+// Response's error CLEARTEXT communication to " ... " not permitted by network security policy
+// Check manifest
+//  <application
+//        android:usesCleartextTraffic="true"
+//        ...
+//   />

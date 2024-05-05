@@ -34,13 +34,24 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            implementation(libs.gson)
             implementation(libs.jnbPing)
+//            implementation(libs.compose.ui.tooling)
+//            implementation(libs.compose.ui.tooling.preview)
+
+        }
+        androidMain.dependencies {
+            implementation(libs.gson)
+            implementation(libs.okhttp3)
+            implementation(libs.compose.ui)
+            implementation(libs.dnsJava)
         }
         androidMain.dependencies {
             implementation(libs.gson)
             implementation(libs.okhttp3)
         }
         iosMain.dependencies { }
+        iosMain.dependencies {  }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
@@ -62,5 +73,6 @@ android {
 
 dependencies {
     implementation(libs.gson)
+    implementation(libs.androidx.core)
 //    implementation(libs.okhttp3)
 }
