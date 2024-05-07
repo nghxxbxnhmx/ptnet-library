@@ -53,7 +53,8 @@ actual class NsLookupService {
 
         try {
             dnsJava_process().forEach { record ->
-                result += "$record\n"
+                val ipMatch = Regex("(\\d+\\.\\d+\\.\\d+\\.\\d+)").find(record)
+                result += "${ipMatch?.groups?.get(1)?.value ?: ""}\n"
             }
             Log.d("NsLookupService", "DNS Result:\n$result ")
         } catch (e: Exception) {
@@ -66,12 +67,12 @@ actual class NsLookupService {
     private fun dnsJava_process(): ArrayList<String> {
         // Perform DNS query
         val resolver: Resolver = SimpleResolver(dServer)
-        Log.d("NsLookupService", "DNS Resolver:\n$resolver ")
+//        Log.d("NsLookupService", "DNS Resolver:\n$resolver ")
         val lookup = Lookup(dName, Type.A)
         lookup.setResolver(resolver)
-        Log.d("NsLookupService", "DNS Lookup:\n$lookup ")
+//        Log.d("NsLookupService", "DNS Lookup:\n$lookup ")
         val records: Array<out Record>? = lookup.run()
-        Log.d("NsLookupService", "DNS records:\n$records ")
+//        Log.d("NsLookupService", "DNS records:\n$records ")
         val result = ArrayList<String>()
 
         if (lookup.result == Lookup.SUCCESSFUL) {
@@ -79,7 +80,7 @@ actual class NsLookupService {
                 result.add(record.toString())
             }
         } else {
-            result.add("DNS query failed")
+            result.add("DNS query failed - check network connected")
         }
         return result
     }
@@ -92,3 +93,6 @@ actual class NsLookupService {
 //  Process - APis result
 //  Process - DTO result
 // Final - Result
+
+// DNS Result:
+// DNS query failed - Check network connected

@@ -9,7 +9,6 @@ import java.io.IOException
 actual class PageLoadService {
     private val client = OkHttpClient()
 
-
     actual fun pageLoadTimer(address: String): Double {
         // Log.d("PageLoad - Url", "isNull:${address.replace(" ", "").isBlank()}")
         if (address.replace(" ", "").isBlank()) {
@@ -35,11 +34,13 @@ actual class PageLoadService {
                 ?.close()
             duration.toDouble()
         } catch (e: IOException) {
-            Log.d("Process", "Response's error ${e.message}");
+            Log.d("PageLoad's error", "${e.message}  - check network connected");
             -2.0
         }
     }
 }
+// PageLoad's error Unable to resolve host "..."
+// Check Internet access - not stable
 
 // Response's error CLEARTEXT communication to " ... " not permitted by network security policy
 // Check manifest
