@@ -1,98 +1,67 @@
 package com.ftel.ptnetlibrary.services
 
-// Call API Service
-import android.util.Log
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import com.ftel.ptnetlibrary.dto.DNSResponseDTO
-import com.google.gson.Gson
+import com.ftel.ptnetlibrary.dto.AnswerDTO
 import org.xbill.DNS.*
 
 actual class NsLookupService {
-    private var dnsResponseDTOResult = mutableStateOf<DNSResponseDTO?>(null)
-    private var callApiService = CallApiService()
-    private var result = ""
-    actual fun lookupResponse_api(address: String): String {
-        // Log.d("Initialize - Result ", result)
-        dnsResponseDTOResult = lookupProcess(address)
-        dnsResponseDTOResult.value?.let { dnsResponseDTO ->
-            dnsResponseDTO.answer.forEach() { item ->
-                result += "${item.data}\n"
-            }
-            // Log.d("Final - Result ", result)
-        }
-        return result
+    actual fun execute(domainName: String, dnsServer: String): ArrayList<AnswerDTO> {
+        return parseLookupResult(lookupProcess(domainName, dnsServer))
     }
 
-    private fun lookupProcess(address: String): MutableState<DNSResponseDTO?> {
-        val url = "https://dns.google/resolve?name=$address"
-        val gson = Gson()
-        // Log.d("Process - APIs url", "Url:$url")
-
-        val jsonString = callApiService.getApiResponse(url)
-        // Log.d("Process - APis result", jsonString)
-        dnsResponseDTOResult.value = gson.fromJson(jsonString, DNSResponseDTO::class.java)
-        // Log.d("Process - DTO result", "${dnsResponseDTOResult.value}")
-        return dnsResponseDTOResult
-    }
-
-    var dName: String = ""
-    var dServer: String = ""
-    actual fun lookupResponse_dnsjava(domainName: String, dnsServer: String): String {
-        dName = domainName;
-        dServer = dnsServer
-        if (domainName.isEmpty()) {
-            Log.d("Lookup DnsJava", "Empty Domain -> zing.vn")
-            dName = "zing.vn"
-        }
-
-        if (dnsServer.isEmpty()) {
-            Log.d("Lookup DnsJava", "Empty DnsServer -> 8.8.8.8")
-            dServer = "8.8.8.8" // Default DNS server (Google DNS)
-        }
-
-        try {
-            dnsJava_process().forEach { record ->
-                val ipMatch = Regex("(\\d+\\.\\d+\\.\\d+\\.\\d+)").find(record)
-                result += "${ipMatch?.groups?.get(1)?.value ?: ""}\n"
-            }
-            Log.d("NsLookupService", "DNS Result:\n$result ")
-        } catch (e: Exception) {
-            Log.d("NsLookupService", "DNS query exception: " + e.message)
-            return ""
-        }
-        return result
-    }
-
-    private fun dnsJava_process(): ArrayList<String> {
+    private fun lookupProcess(dName: String, dServer: String): ArrayList<String> {
         // Perform DNS query
         val resolver: Resolver = SimpleResolver(dServer)
-//        Log.d("NsLookupService", "DNS Resolver:\n$resolver ")
         val lookup = Lookup(dName, Type.A)
         lookup.setResolver(resolver)
-//        Log.d("NsLookupService", "DNS Lookup:\n$lookup ")
         val records: Array<out Record>? = lookup.run()
-//        Log.d("NsLookupService", "DNS records:\n$records ")
         val result = ArrayList<String>()
 
         if (lookup.result == Lookup.SUCCESSFUL) {
             records?.forEach { record ->
                 result.add(record.toString())
             }
-        } else {
-            result.add("DNS query failed - check network connected")
         }
+
         return result
     }
+
+    private fun parseDomain(input: String): String {
+        val domainMatch = Regex("^\\S+")
+        return domainMatch.find(input)?.value ?: ""
+    }
+
+    private fun parseIpAddress(input: String): String {
+        val ipMatch = Regex("(\\d+\\.\\d+\\.\\d+\\.\\d+)").find(input)
+        return ipMatch?.groups?.get(1)?.value ?: ""
+    }
+
+    private fun parseTTL(input: String): Int {
+        val ttlMatch = Regex("(\\d+)\\s+IN")
+        return ttlMatch.find(input)?.groups?.get(1)?.value?.toIntOrNull()!!
+    }
+
+    private fun parseType(input: String): Int {
+        val typeToInt = mapOf("A" to 1, "AAAA" to 2, "CNAME" to 3, "MX" to 4, "NS" to 5)
+        val typeMatch = Regex("IN\\s+(\\S+)")
+        return typeMatch.find(input)?.groups?.get(1)?.value?.let { typeToInt[it] }!!
+    }
+
+
+    private fun parseLookupResult(lookupResult: ArrayList<String>): ArrayList<AnswerDTO> {
+        val answerList: ArrayList<AnswerDTO> = ArrayList<AnswerDTO>()
+        try {
+            lookupResult.forEach { record ->
+                val answerDTO = AnswerDTO(
+                    name = parseDomain(record.toString()),
+                    data = parseIpAddress(record.toString()),
+                    ttl = parseTTL(record.toString()),
+                    type = parseType(record.toString())
+                );
+                answerList.add(answerDTO)
+            }
+        } catch (e: Exception) {
+            return answerList
+        }
+        return answerList
+    }
 }
-
-// Log
-// Initialize - Result
-//  Process - APIs url
-//  -> CallApiServices
-//  Process - APis result
-//  Process - DTO result
-// Final - Result
-
-// DNS Result:
-// DNS query failed - Check network connected
