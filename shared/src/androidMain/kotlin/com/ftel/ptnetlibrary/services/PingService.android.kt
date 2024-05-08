@@ -44,7 +44,7 @@ actual class PingService {
     private fun parseTime(pingOutput: String): Float {
         val hopPattern = "from (.*?):.*time=(\\d+\\.\\d+|\\d+) ms".toRegex()
         val timeLine = pingOutput.lines().firstOrNull { it.contains("time=") }
-
-        return hopPattern.find(timeLine ?: "")?.groupValues?.get(2)?.toFloatOrNull() ?: -1f
+        val timeValue = hopPattern.find(timeLine ?: "")?.groupValues?.get(2)?.toFloatOrNull() ?: -1f
+        return String.format("%.2f", timeValue).toFloat()
     }
 }
