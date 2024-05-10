@@ -5,7 +5,7 @@ actual class NsLookupService {
 //        TODO("Not yet implemented")
 //    }
 
-    actual fun execute(domainName: String, dnsServer: String): ArrayList<AnswerDTO> {
+    actual fun execute(domainName: String, dnsServer: String): ArrayList<String> {
         TODO("Not yet implemented")
     }
 }

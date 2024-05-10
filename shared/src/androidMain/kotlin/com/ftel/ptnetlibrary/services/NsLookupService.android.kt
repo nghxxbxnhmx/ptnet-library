@@ -1,10 +1,16 @@
 package com.ftel.ptnetlibrary.services
 
-import com.ftel.ptnetlibrary.dto.AnswerDTO
 import org.xbill.DNS.*
 
 actual class NsLookupService {
-    actual fun execute(domainName: String, dnsServer: String): ArrayList<AnswerDTO> {
+    actual fun execute(domainName: String, dnsServer: String): ArrayList<String> {
+        //        DNS FPT HCM
+        //        210.245.31.220
+        //        210.245.31.221
+        //
+        //        DNS FPT HNI
+        //        210.245.1.253
+        //        210.245.1.254
         return parseLookupResult(lookupProcess(domainName, dnsServer))
     }
 
@@ -47,21 +53,15 @@ actual class NsLookupService {
     }
 
 
-    private fun parseLookupResult(lookupResult: ArrayList<String>): ArrayList<AnswerDTO> {
-        val answerList: ArrayList<AnswerDTO> = ArrayList<AnswerDTO>()
+    private fun parseLookupResult(lookupResult: ArrayList<String>): ArrayList<String> {
+        val result: ArrayList<String> = ArrayList<String>();
         try {
             lookupResult.forEach { record ->
-                val answerDTO = AnswerDTO(
-                    name = parseDomain(record.toString()),
-                    data = parseIpAddress(record.toString()),
-                    ttl = parseTTL(record.toString()),
-                    type = parseType(record.toString())
-                );
-                answerList.add(answerDTO)
+                result.add(parseIpAddress(record.toString()))
             }
         } catch (e: Exception) {
-            return answerList
+            return result
         }
-        return answerList
+        return result
     }
 }
