@@ -6,16 +6,17 @@ import java.io.IOException
 
 actual class TracerouteService {
     actual fun trace(host: String, ttl: Int): TraceHopDTO {
-        val pingResult : String = pingCommand(url = host, options = "-c 1 -t $ttl")
-        val traceContainer : TraceHopDTO = parsePingOutput(pingResult)
-        traceContainer.time = parsePingOutput(pingCommand(url = traceContainer.ipAddress, options = "-c 1")).time
-        traceContainer.domain = traceContainer.domain.replace(":","")
-        if(traceContainer.domain.equals(traceContainer.ipAddress)) traceContainer.domain = ""
+        val pingResult: String = pingCommand(url = host, options = "-c 1 -t $ttl")
+        val traceContainer: TraceHopDTO = parsePingOutput(pingResult)
+        traceContainer.time =
+            parsePingOutput(pingCommand(url = traceContainer.ipAddress, options = "-c 1")).time
+        traceContainer.domain = traceContainer.domain.replace(":", "")
+        if (traceContainer.domain.equals(traceContainer.ipAddress)) traceContainer.domain = ""
         return traceContainer
     }
 
 
-    fun pingCommand(url: String, options: String): String {
+    private fun pingCommand(url: String, options: String): String {
         return try {
             Runtime.getRuntime().exec("ping $options $url").inputStream.bufferedReader()
                 .use { it.readText() }
@@ -39,7 +40,10 @@ actual class TracerouteService {
     }
 
     private fun parseDomain(pingOutput: String): String {
-        val hopMatch = Regex("(?:64 bytes from |From )((?:[a-zA-Z0-9-]+\\.)*[a-zA-Z0-9-]+)(?=\\s|\\()").find(pingOutput)
+        val hopMatch =
+            Regex("(?:64 bytes from |From )((?:[a-zA-Z0-9-]+\\.)*[a-zA-Z0-9-]+)(?=\\s|\\()").find(
+                pingOutput
+            )
         return hopMatch?.groups?.get(1)?.value ?: ""
     }
 
@@ -56,30 +60,19 @@ actual class TracerouteService {
     }
 
 
-    fun parseEndPoint(pingOutput: String): TraceHopDTO {
-        val domainAndIpPattern = Regex("PING (.+?) \\((.*?)\\)")
-        val matchResult = domainAndIpPattern.find(pingOutput)
+    fun getEndPoint(address: String): TraceHopDTO {
+        val pingOutput: String = pingCommand(address, "-c 1")
 
-        return if (matchResult != null) {
-            val domain = matchResult.groupValues[1]
-            val ipAddress = matchResult.groupValues[2]
-
-            TraceHopDTO(
-                hopNumber = 1,
-                domain = domain,
-                ipAddress = ipAddress,
-                time = 0.0,
-                status = false
-            )
-        } else {
-            TraceHopDTO(
-                hopNumber = 1,
-                domain = "",
-                ipAddress = "",
-                time = 0.0,
-                status = false
-            )
-        }
+        val domain = parseDomain(pingOutput)
+        val ipAddress = parseIpAddress(pingOutput)
+        val time = parseTime(pingOutput)
+        val status = if (time != -1.0) true else false
+        return TraceHopDTO(
+            hopNumber = 1,
+            domain = domain,
+            ipAddress = ipAddress,
+            time = time,
+            status = status
+        )
     }
-
 }

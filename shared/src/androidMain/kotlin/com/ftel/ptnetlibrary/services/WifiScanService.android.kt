@@ -1,20 +1,16 @@
 package com.ftel.ptnetlibrary.services
 
-import android.Manifest
-import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
-import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
-import androidx.core.content.ContextCompat
-import androidx.core.app.ActivityCompat
 import com.ftel.ptnetlibrary.dto.WifiScanResultDTO
 import com.ftel.ptnetlibrary.utils.getAppContext
 
 actual class WifiScanService {
-    actual fun scan(): List<WifiScanResultDTO> {
-        val wifiManager =
-            getAppContext().applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+    private val wifiManager =
+        getAppContext().applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+
+    actual fun getScanResult(): List<WifiScanResultDTO> {
+
         if (!wifiManager.isWifiEnabled) {
             return emptyList()
         }
@@ -22,18 +18,18 @@ actual class WifiScanService {
 
         val wifiScanResultList = mutableListOf<WifiScanResultDTO>()
 
-        if (ContextCompat.checkSelfPermission(
-                getAppContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                getAppContext() as Activity,
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                1009
-            )
-            return emptyList()
-        }
+//        if (ContextCompat.checkSelfPermission(
+//                getAppContext(),
+//                Manifest.permission.ACCESS_FINE_LOCATION
+//            ) != PackageManager.PERMISSION_GRANTED
+//        ) {
+//            ActivityCompat.requestPermissions(
+//                getAppContext() as Activity,
+//                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+//                1009
+//            )
+//            return emptyList()
+//        }
 
         wifiScanResults.forEach { scanResult ->
             val wifiScanResultDTO = WifiScanResultDTO(
@@ -47,6 +43,10 @@ actual class WifiScanService {
         }
 
         return wifiScanResultList
+    }
+
+    actual fun startScan(): Boolean {
+        return wifiManager.startScan()
     }
 
     private fun getWifiChannel(frequency: Int): Int {
