@@ -12,6 +12,7 @@ actual class TracerouteService {
             parsePingOutput(pingCommand(url = traceContainer.ipAddress, options = "-c 1")).time
         traceContainer.domain = traceContainer.domain.replace(":", "")
         if (traceContainer.domain.equals(traceContainer.ipAddress)) traceContainer.domain = ""
+        traceContainer.hopNumber = ttl
         return traceContainer
     }
 
