@@ -56,12 +56,14 @@ actual class WifiScanService {
             else -> -1
         }
     }
+
     private fun convertToChannelWidth(channelWidth: Int): Int {
         return when (channelWidth) {
-            0 -> 20
-            1 -> 40
-            2 -> 80
-            else -> -1
+            in 1..14 -> 20 // Channels 1-14 in the 2.4 GHz band
+            in 36..64 -> 40 // Channels 36-64 in the 5 GHz band
+            in 100..144 -> 80 // Channels 100-144 in the 5 GHz band
+            in 149..165 -> 160 // Channels 149-165 in the 5 GHz band
+            else -> -1 // Default case
         }
     }
 }
