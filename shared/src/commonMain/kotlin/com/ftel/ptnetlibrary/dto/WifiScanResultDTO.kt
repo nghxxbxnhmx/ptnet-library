@@ -5,5 +5,5 @@ data class WifiScanResultDTO (
     var bssid: String,
     var channel: Int,
     var signalLevel: Int,
-    var bandwidth: Int
+    var channelBandwidth: Int
 )

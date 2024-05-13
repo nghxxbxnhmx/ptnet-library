@@ -37,7 +37,7 @@ actual class WifiScanService {
                 bssid = scanResult.BSSID,
                 channel = getWifiChannel(scanResult.frequency),
                 signalLevel = scanResult.level,
-                bandwidth = scanResult.frequency
+                channelBandwidth = convertToChannelWidth(getWifiChannel(scanResult.frequency))
             )
             wifiScanResultList.add(wifiScanResultDTO)
         }
@@ -53,6 +53,14 @@ actual class WifiScanService {
         return when (frequency) {
             in 2412..2484 -> (frequency - 2412) / 5 + 1
             in 5170..5825 -> (frequency - 5170) / 5 + 34
+            else -> -1
+        }
+    }
+    private fun convertToChannelWidth(channelWidth: Int): Int {
+        return when (channelWidth) {
+            0 -> 20
+            1 -> 40
+            2 -> 80
             else -> -1
         }
     }
