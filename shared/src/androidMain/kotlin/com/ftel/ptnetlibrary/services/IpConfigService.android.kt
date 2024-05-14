@@ -94,7 +94,7 @@ actual class IpConfigService {
                 }
             }
         } catch (e: SocketException) {
-            e.printStackTrace()
+            Log.d("IpConfigHelper", "Get Gateway throw error!!!", e)
         }
         return "N/A"
     }

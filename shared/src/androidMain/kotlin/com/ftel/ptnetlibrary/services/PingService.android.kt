@@ -1,5 +1,6 @@
 package com.ftel.ptnetlibrary.services
 
+import android.util.Log
 import com.ftel.ptnetlibrary.dto.PingDTO
 import java.io.IOException
 
@@ -16,6 +17,7 @@ actual class PingService {
             Runtime.getRuntime().exec("ping $options $address").inputStream.bufferedReader()
                 .use { it.readText() }
         } catch (e: IOException) {
+            Log.e("PingService", "func executePingCommand throw error!", e)
             "N/A"
         }
     }

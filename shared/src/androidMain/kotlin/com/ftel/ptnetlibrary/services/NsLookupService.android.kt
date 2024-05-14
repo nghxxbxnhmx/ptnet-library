@@ -1,5 +1,6 @@
 package com.ftel.ptnetlibrary.services
 
+import android.util.Log
 import org.xbill.DNS.*
 
 actual class NsLookupService {
@@ -60,6 +61,7 @@ actual class NsLookupService {
                 result.add(parseIpAddress(record.toString()))
             }
         } catch (e: Exception) {
+            Log.e("NsLookupService", "func parseLookupResult throw error!", e)
             return result
         }
         return result

@@ -10,7 +10,6 @@ actual class PageLoadService {
     private val client = OkHttpClient()
 
     actual fun pageLoadTimer(address: String): Double {
-        // Log.d("PageLoad - Url", "isNull:${address.replace(" ", "").isBlank()}")
         if (address.replace(" ", "").isBlank()) {
             return -1.0
         }
@@ -21,7 +20,6 @@ actual class PageLoadService {
         } else {
             url = "http://${address.trim()}"
         }
-        // Log.d("PageLoad - Url", "Processed url: $url");
 
         val request: Request = Request.Builder().url(url).build()
 
@@ -34,7 +32,7 @@ actual class PageLoadService {
                 ?.close()
             duration.toDouble()
         } catch (e: IOException) {
-            Log.d("PageLoad's error", "${e.message}  - check network connected");
+            Log.d("PageLoad", "Get time throw error! (check network connected)", e);
             -2.0
         }
     }

@@ -22,7 +22,7 @@ actual class TracerouteService {
             Runtime.getRuntime().exec("ping $options $url").inputStream.bufferedReader()
                 .use { it.readText() }
         } catch (e: IOException) {
-            Log.e("PingUtility", "Error executing ping command", e)
+            Log.e("TracerouteService", "func pingCommand throw error!", e)
             ""
         }
     }
