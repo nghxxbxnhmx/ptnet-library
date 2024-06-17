@@ -36,9 +36,6 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.gson)
             implementation(libs.jnbPing)
-//            implementation(libs.compose.ui.tooling)
-//            implementation(libs.compose.ui.tooling.preview)
-
         }
         androidMain.dependencies {
             implementation(libs.gson)
@@ -46,11 +43,7 @@ kotlin {
             implementation(libs.compose.ui)
             implementation(libs.dnsJava)
         }
-        androidMain.dependencies {
-            implementation(libs.gson)
-            implementation(libs.okhttp3)
-        }
-        iosMain.dependencies { }
+
         iosMain.dependencies {  }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -68,6 +61,11 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    sourceSets{
+        named("main") {
+            assets.srcDir("src/androidMain/assets")
+        }
     }
 }
 

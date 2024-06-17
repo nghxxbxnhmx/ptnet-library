@@ -7,6 +7,10 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import com.ftel.ptnetlibrary.dto.WifiScanResultDTO
 import com.ftel.ptnetlibrary.utils.getAppContext
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
+import java.util.*
 
 actual class WifiScanService {
     private val wifiManager =
@@ -23,27 +27,44 @@ actual class WifiScanService {
 
         val wifiScanResultList = mutableListOf<WifiScanResultDTO>()
 
-        wifiScanResults.forEach { scanResult ->
-            val wifiScanResultDTO = WifiScanResultDTO(
-                ssid = parseSSID(scanResult),
-                bssid = scanResult.BSSID,
-                channel = getWifiChannel(scanResult.frequency),
-                signalLevel = scanResult.level,
-                channelBandwidth = convertToChannelWidth(getWifiChannel(scanResult.frequency)),
-                advancedInfo = WifiScanResultDTO.AdvancedInfo(
-                    standard = parseStandard(scanResult),
-                    capabilities = scanResult.capabilities,
-                    bss = isSupportedBT80211v(scanResult), ft = isSupportedFT80211r(scanResult),
-                    rm = isSupportedRM80211k(scanResult),
-                    pmf = isSupportedPMF80211w(scanResult),
-                    ftm = isSupportedFTM80211mc(scanResult),
-                    mlo = isSupportedMLO80211be(scanResult),
-                    mld = parseMLD(scanResult)
-                )
-            )
-            wifiScanResultList.add(wifiScanResultDTO)
+        // Create a map to hold the merged results
+        val mergedResults = mutableMapOf<Pair<String, String>, MutableList<Int>>()
+        wifiScanResults.forEach { result ->
+            val key = Pair(result.SSID, result.BSSID)
+            if (mergedResults.containsKey(key)) {
+                mergedResults[key]?.add(getWifiChannel(result.frequency))
+            } else {
+                mergedResults[key] = mutableListOf(getWifiChannel(result.frequency))
+            }
         }
-
+        // Switch all bssid -> manufacturer
+        // val manufacturers = wifiScanResults.associate { it.BSSID to fetchManufacturerName(it) }
+        mergedResults.forEach { (key, channels) ->
+            wifiScanResults.forEach { scanResult ->
+                if (scanResult.SSID.equals(key.first) && scanResult.BSSID.equals(key.second)) {
+                    val wifiScanResultDTO = WifiScanResultDTO(
+                        ssid = parseSSID(scanResult),
+                        bssid = scanResult.BSSID,
+                        channel = channels,
+                        signalLevel = scanResult.level,
+                        channelBandwidth = convertToChannelWidth(getWifiChannel(scanResult.frequency)),
+                        advancedInfo = WifiScanResultDTO.AdvancedInfo(
+                            standard = parseStandard(scanResult),
+                            securityTypes = parseSecurityTypes(scanResult),
+                            manufacturer = fetchManufacturerName(scanResult),
+                            capabilities = scanResult.capabilities,
+                            bss = isSupportedBT80211v(scanResult), ft = isSupportedFT80211r(scanResult),
+                            rm = isSupportedRM80211k(scanResult),
+                            pmf = isSupportedPMF80211w(scanResult),
+                            ftm = isSupportedFTM80211mc(scanResult),
+                            mlo = isSupportedMLO80211be(scanResult),
+                            mld = parseMLD(scanResult)
+                        )
+                    )
+                    wifiScanResultList.add(wifiScanResultDTO)
+                }
+            }
+        }
         return wifiScanResultList
     }
 
@@ -77,6 +98,76 @@ actual class WifiScanService {
      */
     private fun parseSSID(wifi: ScanResult): String {
         return if (wifi.SSID.isNullOrBlank()) "[hidden]" else wifi.SSID
+    }
+
+    /**
+     * Security Types
+     * @hide
+     * Security types: WEP, WPA-PSK, WPA2-PSK, WPA3-SAE, WPA3-Enterprise.
+     * Encryption methods: TKIP, AES, CCMP, GCMP, 192, NONE.
+     */
+    private fun parseSecurityTypes(wifi: ScanResult): String {
+        val regex = """(WEP|WPA2?-PSK|WPA3?-SAE|WPA3?-Enterprise)-(TKIP|AES|CCMP|GCMP|192|NONE)""".toRegex()
+        val matches = regex.findAll(wifi.capabilities)
+        // Collect all matched strings
+        val matchedSecurityTypes = matches.map { it.value }.toList()
+
+        // If no matches are found, return "NONE"
+        if (matchedSecurityTypes.isEmpty()) {
+            return "NONE"
+        }
+
+        // Join the matched strings with "/"
+        return matchedSecurityTypes.joinToString("/")
+    }
+
+    /**
+     * Search manufacturer from internet
+     * @hide
+     * https://standards-oui.ieee.org/
+     */
+    private fun fetchManufacturerName(wifi: ScanResult): WifiScanResultDTO.AdvancedInfo.Manufacturer {
+        val bssid = wifi.BSSID
+        // Extract first 3 bytes of MAC address (OUI part)
+        val hex = bssid.substring(0, 8).uppercase(Locale.ROOT).replace(":", "-")
+        val base16 = bssid.substring(0, 8).uppercase(Locale.ROOT).replace(":", "")
+        val errorThrow = WifiScanResultDTO.AdvancedInfo.Manufacturer(
+            hex = "",
+            base16 = "",
+            organization = "",
+            address = "",
+            postcode = "",
+            countryCode = ""
+        )
+        try {
+            // Open and read the oui.txt file from assets
+            val inputStream = getAppContext().applicationContext.assets.open("oui.txt")
+            val bufferedReader = BufferedReader(InputStreamReader(inputStream))
+
+            // Read line by line to find the matching manufacturer
+            var line: String?
+            while (bufferedReader.readLine().also { line = it } != null) {
+                if (line?.contains(hex) == true && line?.contains(base16) == true) {
+                    val parts = line?.split("; ")
+
+                    if (!parts.isNullOrEmpty())
+                        return WifiScanResultDTO.AdvancedInfo.Manufacturer(
+                            hex = parts[0],
+                            base16 = parts[1],
+                            organization = parts[2],
+                            address = parts[3],
+                            postcode = parts[4],
+                            countryCode = parts[5]
+                        )
+                }
+            }
+
+            bufferedReader.close()
+            inputStream.close()
+            return errorThrow
+        } catch (e: IOException) {
+            return errorThrow
+        }
     }
 
     /**
@@ -159,9 +250,7 @@ actual class WifiScanService {
         // Additional check by type of Security
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val securityTypes = wifi.securityTypes
-//            var listSecurity = mutableListOf<Int>()
             for (securityType in securityTypes) {
-//                listSecurity.add(securityType)
                 if (pmfCheckList.contains(securityType)) {
                     return 1
                 }
