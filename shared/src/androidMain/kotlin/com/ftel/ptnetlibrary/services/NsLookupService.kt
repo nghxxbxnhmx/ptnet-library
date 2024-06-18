@@ -3,8 +3,8 @@ package com.ftel.ptnetlibrary.services
 import android.util.Log
 import org.xbill.DNS.*
 
-actual class NsLookupService {
-    actual fun execute(domainName: String, dnsServer: String): ArrayList<String> {
+class NsLookupService {
+    fun execute(domainName: String, dnsServer: String): ArrayList<String> {
         //        DNS FPT HCM
         //        210.245.31.220
         //        210.245.31.221

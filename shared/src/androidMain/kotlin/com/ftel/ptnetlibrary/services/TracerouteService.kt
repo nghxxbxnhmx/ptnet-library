@@ -4,8 +4,8 @@ import android.util.Log
 import com.ftel.ptnetlibrary.dto.TraceHopDTO
 import java.io.IOException
 
-actual class TracerouteService {
-    actual fun trace(host: String, ttl: Int): TraceHopDTO {
+class TracerouteService {
+    fun trace(host: String, ttl: Int): TraceHopDTO {
         val pingResult: String = pingCommand(url = host, options = "-c 1 -t $ttl")
         val traceContainer: TraceHopDTO = parsePingOutput(pingResult)
         traceContainer.time =

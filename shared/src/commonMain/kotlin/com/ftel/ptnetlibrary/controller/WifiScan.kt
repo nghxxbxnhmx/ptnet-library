@@ -1,8 +1,8 @@
-package com.ftel.ptnetlibrary.services
+package com.ftel.ptnetlibrary.controller
 
 import com.ftel.ptnetlibrary.dto.WifiScanResultDTO
 
-expect class WifiScanService {
+expect class WifiScan {
     fun getScanResult(): List<WifiScanResultDTO>
     fun startScan() : Boolean
 }

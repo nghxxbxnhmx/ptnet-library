@@ -5,8 +5,8 @@ import okio.IOException
 import java.net.InetSocketAddress
 import java.net.Socket
 
-actual class PortScanService {
-    actual fun portScan(address: String, port: Int, timeOut: Int): String {
+class PortScanService {
+    fun portScan(address: String, port: Int, timeOut: Int): String {
         return try {
             val socket = Socket()
             socket.connect(InetSocketAddress(address.trim(), port), timeOut)

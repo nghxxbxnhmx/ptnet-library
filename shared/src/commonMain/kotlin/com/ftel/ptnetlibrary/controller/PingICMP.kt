@@ -1,7 +1,7 @@
-package com.ftel.ptnetlibrary.services
+package com.ftel.ptnetlibrary.controller
 
 import com.ftel.ptnetlibrary.dto.PingDTO
 
-expect class PingService {
+expect class PingICMP {
     fun execute(address: String): PingDTO
-}
+}w

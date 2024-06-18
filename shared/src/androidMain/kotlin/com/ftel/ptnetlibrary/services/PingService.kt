@@ -4,8 +4,8 @@ import android.util.Log
 import com.ftel.ptnetlibrary.dto.PingDTO
 import java.io.IOException
 
-actual class PingService {
-    actual fun execute(
+class PingService {
+    fun execute(
         address: String
     ): PingDTO {
         return parseSinglePingResult(executePingCommand(address, "-c 1"))

@@ -4,7 +4,11 @@ import android.content.Context
 import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.util.Log
+import com.ftel.ptnetlibrary.dto.IpConfigDTO
 import com.ftel.ptnetlibrary.utils.getAppContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.io.IOException
 import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
@@ -14,8 +18,8 @@ import java.net.UnknownHostException
 import java.util.Collections
 import java.util.Locale
 
-actual class IpConfigService {
-    actual fun getIpAddress(useIpv4: Boolean): String {
+class IpConfigService {
+    fun getIpAddress(useIpv4: Boolean): String {
         try {
             val interfaces = NetworkInterface.getNetworkInterfaces()
             while (interfaces.hasMoreElements()) {
@@ -36,7 +40,7 @@ actual class IpConfigService {
         return "N/A"
     }
 
-    actual fun getSubnetMask(): String {
+    fun getSubnetMask(): String {
         try {
             val interfaces = NetworkInterface.getNetworkInterfaces()
             while (interfaces.hasMoreElements()) {
@@ -81,7 +85,7 @@ actual class IpConfigService {
     }
 
 
-    actual fun getGateway(): String {
+    fun getGateway(): String {
         try {
             val interfaces = NetworkInterface.getNetworkInterfaces()
             while (interfaces.hasMoreElements()) {
@@ -132,7 +136,7 @@ actual class IpConfigService {
     }
 
 
-    actual fun getDeviceMAC(): String {
+    fun getDeviceMAC(): String {
         val wifiManager =
             getAppContext().applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
         val wifiInfo: WifiInfo? = wifiManager.connectionInfo
@@ -144,7 +148,7 @@ actual class IpConfigService {
         }
     }
 
-    actual fun getBSSID(): String {
+    fun getBSSID(): String {
         val wifiManager =
             getAppContext().applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
         val wifiInfo: WifiInfo? = wifiManager.connectionInfo
@@ -152,7 +156,7 @@ actual class IpConfigService {
         return bssid.toUpperCase()
     }
 
-    actual fun getSSID(): String {
+    fun getSSID(): String {
         val wifiManager =
             getAppContext().applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
         val wifiInfo: WifiInfo? = wifiManager.connectionInfo
@@ -160,5 +164,48 @@ actual class IpConfigService {
             return it.trim().removePrefix("\"").removeSuffix("\"")
         }
         return ssid ?: "N/A"
+    }
+
+    fun getInternalIpAddress(useIpv4: Boolean): String {
+        val okHttpClient = OkHttpClient()
+        val url = if (useIpv4) {
+            "https://api.ipify.org/"
+        } else {
+            "https://api64.ipify.org/"
+        }
+
+        val request = Request.Builder()
+            .url(url)
+            .build()
+
+        try {
+            val response = okHttpClient.newCall(request).execute()
+            val responseBody = response.body?.string()
+            if (response.isSuccessful && responseBody != null) {
+                // Đóng body của response
+                response.close()
+                return responseBody
+            } else {
+                // Đóng body của response
+                response.close()
+                return "N/A"
+            }
+        } catch (e: IOException) {
+            Log.d("IpConfig", "Get api throw error!", e)
+            return "N/A"
+        }
+    }
+
+    fun getIpConfigInfo(useIpv4: Boolean): IpConfigDTO {
+        val ipConfigService = IpConfigService()
+        return IpConfigDTO(
+            ipAddress = ipConfigService.getIpAddress(useIpv4),
+            subnetMask = ipConfigService.getSubnetMask(),
+            gateway = ipConfigService.getGateway(),
+            deviceMAC = ipConfigService.getDeviceMAC(),
+            bssid = ipConfigService.getBSSID(),
+            ssid = ipConfigService.getSSID(),
+            internalIpAddress = ipConfigService.getInternalIpAddress(useIpv4)
+        )
     }
 }

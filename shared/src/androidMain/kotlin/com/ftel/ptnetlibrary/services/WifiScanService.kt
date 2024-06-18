@@ -5,11 +5,11 @@ import android.net.wifi.WifiManager
 import com.ftel.ptnetlibrary.dto.WifiScanResultDTO
 import com.ftel.ptnetlibrary.utils.getAppContext
 
-actual class WifiScanService {
+class WifiScanService {
     private val wifiManager =
         getAppContext().applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
 
-    actual fun getScanResult(): List<WifiScanResultDTO> {
+    fun getScanResult(): List<WifiScanResultDTO> {
 
         if (!wifiManager.isWifiEnabled) {
             return emptyList()
@@ -45,7 +45,7 @@ actual class WifiScanService {
         return wifiScanResultList
     }
 
-    actual fun startScan(): Boolean {
+    fun startScan(): Boolean {
         return wifiManager.startScan()
     }
 

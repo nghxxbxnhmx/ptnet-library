@@ -1,7 +1,7 @@
-package com.ftel.ptnetlibrary.services
+package com.ftel.ptnetlibrary.controller
 
 import com.ftel.ptnetlibrary.dto.TraceHopDTO
 
-expect class TracerouteService {
+expect class Traceroute {
     fun trace(host: String,ttl: Int): TraceHopDTO
 }
