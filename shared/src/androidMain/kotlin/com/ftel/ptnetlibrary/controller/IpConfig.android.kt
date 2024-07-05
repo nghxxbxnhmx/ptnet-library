@@ -29,7 +29,7 @@ actual class IpConfig {
         return ipConfigService.getSSID()
     }
 
-    actual fun getInternalIpAddress(useIpv4: Boolean): String {
+    actual fun getExternalIpAddress(useIpv4: Boolean): String {
         return ipConfigService.getInternalIpAddress(useIpv4)
     }
 

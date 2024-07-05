@@ -27,7 +27,7 @@ actual class IpConfig {
         TODO("Not yet implemented")
     }
 
-    actual fun getInternalIpAddress(useIpv4: String): String {
+    actual fun getExternalIpAddress(useIpv4: Boolean): String {
         TODO("Not yet implemented")
     }
 

@@ -9,6 +9,6 @@ expect class IpConfig {
     fun getDeviceMAC(): String
     fun getBSSID(): String
     fun getSSID(): String
-    fun getInternalIpAddress(useIpv4: Boolean): String
+    fun getExternalIpAddress(useIpv4: Boolean): String
     fun getIpConfigInfo(): IpConfigDTO
 }
