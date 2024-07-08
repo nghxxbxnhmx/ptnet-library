@@ -1,0 +1,78 @@
+AR=@AR@
+CC=@CC@
+CXX=@CXX@
+BUILD_MINGW=@BUILD_MINGW@
+BUILD_MINGW_X64=@BUILD_MINGW_X64@
+SRCHOME=../src
+CFLAGS=-g -fPIC -DPIC -I$(SRCHOME)/include @PCAP_INC@ @CFLAGS@
+LDFLAGS=@LDFLAGS@
+LIBNDPI=$(SRCHOME)/lib/libndpi.a
+LIBS=$(LIBNDPI) @PCAP_LIB@ @LIBS@ @ADDITIONAL_LIBS@
+HEADERS=intrusion_detection.h reader_util.h $(SRCHOME)/include/ndpi_api.h \
+        $(SRCHOME)/include/ndpi_typedefs.h $(SRCHOME)/include/ndpi_protocol_ids.h
+OBJS=ndpiReader.o reader_util.o intrusion_detection.o
+PREFIX?=@prefix@
+
+ifneq ($(BUILD_MINGW),)
+SUFFIX:=.exe
+CFLAGS+=-I@srcdir@/../windows/WpdPack/Include -I@srcdir@/../windows/WpdPack/Include/pcap
+LIBS+=-Wl,-Bstatic -lpthread -Wl,-Bdynamic
+
+ifneq ($(BUILD_MINGW_X64),)
+LIBS+=@srcdir@/../windows/WpdPack/Lib/x64/wpcap.lib
+else
+LIBS+=@srcdir@/../windows/WpdPack/Lib/wpcap.lib
+endif
+
+else
+
+LIBS+=-lpthread
+
+endif
+
+all: ndpiReader$(SUFFIX) @DPDK_TARGET@
+
+EXECUTABLE_SOURCES := ndpiReader.c ndpiSimpleIntegration.c
+COMMON_SOURCES := $(filter-out $(EXECUTABLE_SOURCES),$(wildcard *.c ))
+
+libndpiReader.a: $(COMMON_SOURCES:%.c=%.o) $(LIBNDPI)
+	$(AR) rsv libndpiReader.a $(COMMON_SOURCES:%.c=%.o)
+
+ndpiReader$(SUFFIX): libndpiReader.a $(LIBNDPI) ndpiReader.o
+	$(CC) $(CFLAGS) $(LDFLAGS) ndpiReader.o libndpiReader.a $(LIBS) -o $@
+
+ndpiSimpleIntegration$(SUFFIX): ndpiSimpleIntegration.o
+	$(CC) $(CFLAGS) $(LDFLAGS) $< $(LIBS) -o $@
+
+%.o: %.c $(HEADERS) Makefile
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+
+install: ndpiReader$(SUFFIX)
+	mkdir -p $(DESTDIR)$(PREFIX)/bin/
+	mkdir -p $(DESTDIR)$(PREFIX)/share/ndpi
+	cp ndpiReader$(SUFFIX) $(DESTDIR)$(PREFIX)/bin/
+	cp protos.txt $(DESTDIR)$(PREFIX)/share/ndpi/ndpiProtos.txt
+	cp mining_hosts.txt $(DESTDIR)$(PREFIX)/share/ndpi/ndpiCustomCategory.txt
+	[ -f ndpiSimpleIntegration$(SUFFIX) ] && cp ndpiSimpleIntegration$(SUFFIX) $(DESTDIR)$(PREFIX)/bin/ndpiSimpleIntegration$(SUFFIX) || true
+	[ -f build/app/ndpiReader.dpdk ] && cp build/app/ndpiReader.dpdk $(DESTDIR)$(PREFIX)/bin/ || true
+	[ -f ndpiReader.dpdk ] && cp ndpiReader.dpdk $(DESTDIR)$(PREFIX)/bin/ || true
+
+dpdk:
+	$(MAKE) -f Makefile.dpdk
+
+check:
+	 cppcheck --template='{file}:{line}:{severity}:{message}' --quiet --enable=all --force -I$(SRCHOME)/include *.c
+
+clean:
+	/bin/rm -f *.o ndpiReader ndpiSimpleIntegration ndpiReader$(SUFFIX) ndpiSimpleIntegration$(SUFFIX) ndpiReader.dpdk
+	/bin/rm -f .*.dpdk.cmd .*.o.cmd *.dpdk.map .*.o.d
+	/bin/rm -f _install _postbuild _postinstall _preinstall
+	/bin/rm -rf build
+
+distdir:
+	cp categories.txt mining_hosts.txt protos.txt README.DPDK '$(distdir)/'
+	find . -maxdepth 1 -type f -name '*.c' -o -name '*.h' -o -name '*.py' | xargs -I'{}' cp '{}' '$(distdir)/{}'
+
+distclean: clean
+	/bin/rm -f Makefile.dpdk
+	/bin/rm -f Makefile
